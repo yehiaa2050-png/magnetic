@@ -18,10 +18,10 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # تكوين هوية Git (هذه الخطوة الجديدة)
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-
+          # تكوين هوية Git - هذه الأوامر يجب أن تكون هنا
+          git config --global user.email "eissa0070@users.noreply.github.com"
+          git config --global user.name "eissa0070"
+          
           git remote set-url origin https://eissa0070:$HF_TOKEN@huggingface.co/spaces/eissa0070/n8nautomtion
           git fetch origin main
           git merge origin/main --allow-unrelated-histories --no-edit
