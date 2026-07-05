@@ -2,8 +2,8 @@ name: Sync to Hugging Face Space (Docker)
 
 on:
   push:
-    branches: [main]  # أو master، حسب فرعك الرئيسي
-  workflow_dispatch: # للتشغيل اليدوي
+    branches: [main]  # أو master
+  workflow_dispatch:
 
 jobs:
   sync-to-hub:
@@ -14,12 +14,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      # هذه الخطوة ضرورية لمساحات Docker لضمان بناء الصورة بشكل صحيح
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
       - name: Push to Hugging Face Hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git push https://eissa0070:$HF_TOKEN@huggingface.co/spaces/eissa0070/n8nautomtion main
+          git remote set-url origin https://eissa0070:$HF_TOKEN@huggingface.co/spaces/eissa0070/n8nautomtion
+          git push origin main
