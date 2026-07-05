@@ -54,6 +54,40 @@ async function startServer() {
     }
   });
 
+  app.post("/api/chat", async (req, res) => {
+    try {
+      const { messages, state } = req.body;
+      const { massKg, distanceMm, material, shape, forceN, requiredForceN } = state;
+      
+      const systemPrompt = `أنت مساعد ذكي ومتخصص في الفيزياء وهندسة المغناطيسيات، مدمج داخل معمل محاكاة افتراضي للرفع المغناطيسي.
+حالة المحاكاة الحالية:
+- الوزن: ${massKg} كجم
+- المسافة الحالية: ${distanceMm} ملم
+- المادة: ${material}
+- الشكل: ${shape}
+- القوة المغناطيسية الحالية: ${forceN} نيوتن
+- القوة المطلوبة للرفع: ${requiredForceN} نيوتن
+
+دورك هو الرد على استفسارات المستخدم باللغة العربية بأسلوب علمي مبسط ودقيق، ومساعدته في حساب القوى وفهم كيفية تحقيق التوازن، أو شرح مفاهيم كهرومغناطيسية. حافظ على إجاباتك موجزة نسبياً.`;
+
+      const apiMessages = [
+        { role: 'system', content: systemPrompt },
+        ...messages.map((m: any) => ({ role: m.role, content: m.content }))
+      ];
+
+      const groq = getGroq();
+      const chatCompletion = await groq.chat.completions.create({
+        messages: apiMessages,
+        model: 'llama-3.3-70b-versatile',
+      });
+
+      res.json({ reply: chatCompletion.choices[0]?.message?.content || '' });
+    } catch (error: any) {
+      console.error("Groq Chat Error:", error);
+      res.status(500).json({ error: error.message || "Chat failed" });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

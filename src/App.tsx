@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Sparkles, Cloud, BarChart3, Magnet, Info, Palette, Box } from 'lucide-react';
 import Simulator3D from './components/Simulator3D';
 import ForceChart from './components/ForceChart';
+import MagneticFieldOverlay from './components/MagneticFieldOverlay';
+import AIAgentChat from './components/AIAgentChat';
 import { 
     calculateMagneticForce, 
     calculateRequiredForce, 
@@ -13,14 +15,14 @@ import {
 import { saveExperimentToCloud } from './lib/cloudStorage';
 import { loadParams, saveParams } from './lib/cache';
 import Tooltip from './components/Tooltip';
+import GoogleLogin from './components/GoogleLogin';
+import ExperimentHistory from './components/ExperimentHistory';
 
 function App() {
   const [mass, setMass] = useState<number>(175);
   const [distance, setDistance] = useState<number>(30);
   const [material, setMaterial] = useState<string>('n52');
   const [shape, setShape] = useState<string>('box');
-  const [suggestion, setSuggestion] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string>('');
   const [themeColor, setThemeColor] = useState<string>('#06b6d4');
@@ -52,19 +54,6 @@ function App() {
     if (currentForce < requiredForce - tolerance) return 'falling';
     return 'balanced';
   }, [requiredForce, currentForce]);
-
-  const handleSuggestDesign = async () => {
-    setIsGenerating(true);
-    setSuggestion('جاري تحليل البيانات المعقدة باستخدام الذكاء الاصطناعي...');
-    try {
-        const text = await getOptimalDesignSuggestion(mass, distance, material, shape);
-        setSuggestion(text);
-    } catch (e) {
-        setSuggestion('حدث خطأ أثناء الاتصال بنموذج الذكاء الاصطناعي.');
-    } finally {
-        setIsGenerating(false);
-    }
-  };
 
   const handleSaveToCloud = async () => {
     setIsSaving(true);
@@ -117,18 +106,21 @@ function App() {
             </div>
         </div>
 
-        <Tooltip text="تخصيص اللون المميز والتوهج المغناطيسي لكامل واجهة المعمل.">
-            <div className="flex items-center gap-3 px-4 py-2 border border-white/5 shadow-inner rounded-full bg-black/40">
-                <Palette className="w-4 h-4 text-white/50" />
-                <span className="text-[10px] uppercase text-white/70 mono">Theme Matrix</span>
-                <input 
-                    type="color" 
-                    value={themeColor} 
-                    onChange={(e) => handleColorChange(e.target.value)}
-                    className="w-5 h-5 p-0 border-0 rounded cursor-pointer bg-transparent"
-                />
-            </div>
-        </Tooltip>
+        <div className="flex items-center gap-4">
+            <Tooltip text="تخصيص اللون المميز والتوهج المغناطيسي لكامل واجهة المعمل.">
+                <div className="flex items-center gap-3 px-4 py-2 border border-white/5 shadow-inner rounded-full bg-black/40">
+                    <Palette className="w-4 h-4 text-white/50" />
+                    <span className="text-[10px] uppercase text-white/70 mono">Theme Matrix</span>
+                    <input 
+                        type="color" 
+                        value={themeColor} 
+                        onChange={(e) => handleColorChange(e.target.value)}
+                        className="w-5 h-5 p-0 border-0 rounded cursor-pointer bg-transparent"
+                    />
+                </div>
+            </Tooltip>
+            <GoogleLogin themeColor={themeColor} />
+        </div>
       </header>
 
       <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -181,6 +173,7 @@ function App() {
                             <option value="box">مكعب (معدني)</option>
                             <option value="sphere">كرة (فولاذية)</option>
                             <option value="torus">حلقة (رنين)</option>
+                            <option value="rail">قضيب (سكة حديدية)</option>
                         </select>
                     </div>
                 </div>
@@ -236,18 +229,6 @@ function App() {
 
             {/* Action Buttons */}
             <div className="grid grid-cols-1 gap-3">
-                <Tooltip text="يستدعي نماذج الذكاء الاصطناعي لاقتراح الترتيب والنوع الأمثل للمغناطيسات لتحقيق التوازن المنشود.">
-                    <button 
-                        onClick={handleSuggestDesign}
-                        disabled={isGenerating}
-                        className="w-full py-4 text-[#050505] font-bold rounded flex items-center justify-center gap-2 transition-all magnetic-glow disabled:opacity-50 hover:brightness-110"
-                        style={{ backgroundColor: themeColor }}
-                    >
-                        <Sparkles className="w-5 h-5" />
-                        {isGenerating ? 'جاري التحليل...' : 'اقترح التصميم الأمثل'}
-                    </button>
-                </Tooltip>
-                
                 <Tooltip text="يسجل كافة البيانات الفيزيائية المتوفرة ومعطيات التوازن في قاعدة بيانات سحابية لحظية.">
                     <button 
                         onClick={handleSaveToCloud}
@@ -265,18 +246,34 @@ function App() {
                     </div>
                 )}
             </div>
+
+            {/* Experiment History */}
+            <div className="mt-4">
+                <ExperimentHistory 
+                    themeColor={themeColor} 
+                    onRestore={(data) => {
+                        if (data.weightKg) setMass(data.weightKg);
+                        if (data.distanceMm) setDistance(data.distanceMm);
+                        if (data.material) setMaterial(data.material);
+                        if (data.shape) setShape(data.shape);
+                    }} 
+                />
+            </div>
             
-            {/* AI Suggestion Box */}
-            {suggestion && (
-                <div className="p-4 border rounded-lg relative overflow-hidden glass-panel" style={{ borderColor: 'var(--theme-color-dim)' }}>
-                    <h3 className="text-xs font-bold flex gap-2 items-center mb-2 uppercase tracking-wider" style={{ color: themeColor }}>
-                        <Sparkles className="w-4 h-4" /> توصية AI
-                    </h3>
-                    <p className="text-xs text-white/80 italic leading-relaxed whitespace-pre-wrap relative z-10">
-                        {suggestion}
-                    </p>
-                </div>
-            )}
+            {/* AI Agent Chat Box */}
+            <div className="mt-4">
+               <AIAgentChat 
+                  themeColor={themeColor} 
+                  state={{
+                     massKg: mass,
+                     distanceMm: distance,
+                     material: MAGNETIC_MATERIALS[material]?.name || material,
+                     shape,
+                     forceN: currentForce,
+                     requiredForceN: requiredForce
+                  }} 
+               />
+            </div>
         </section>
 
         {/* Left Panel (3D & Visuals) */}
@@ -291,6 +288,7 @@ function App() {
                     themeColor={themeColor}
                     shape={shape}
                 />
+                <MagneticFieldOverlay distanceMm={distance} forceN={currentForce} themeColor={themeColor} />
             </div>
             
             <div className="mt-auto glass-panel p-6 rounded-2xl">

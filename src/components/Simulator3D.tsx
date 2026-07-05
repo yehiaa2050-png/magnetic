@@ -20,6 +20,7 @@ function LevitatingObject({ distanceMm, massKg, shape, status }: { distanceMm: n
     switch(shape) {
       case 'sphere': return <sphereGeometry args={[size/1.5, 32, 32]} />;
       case 'torus': return <torusGeometry args={[size/1.8, size/4, 16, 32]} />;
+      case 'rail': return <boxGeometry args={[size * 4, size / 1.5, size / 1.5]} />;
       case 'box':
       default: return <boxGeometry args={[size, size, size]} />;
     }
