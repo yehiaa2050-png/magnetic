@@ -2,7 +2,7 @@ name: Sync to Hugging Face Space (Docker)
 
 on:
   push:
-    branches: [main]  # أو master
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -19,4 +19,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git remote set-url origin https://eissa0070:$HF_TOKEN@huggingface.co/spaces/eissa0070/n8nautomtion
+          # جلب التغييرات من الفرع البعيد main ودمجها مع الفرع المحلي
+          git fetch origin main
+          git merge origin/main --allow-unrelated-histories --no-edit
           git push origin main
