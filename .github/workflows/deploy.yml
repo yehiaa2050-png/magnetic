@@ -1,0 +1,25 @@
+name: Sync to Hugging Face Space (Docker)
+
+on:
+  push:
+    branches: [main]  # أو master، حسب فرعك الرئيسي
+  workflow_dispatch: # للتشغيل اليدوي
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # هذه الخطوة ضرورية لمساحات Docker لضمان بناء الصورة بشكل صحيح
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Push to Hugging Face Hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git push https://eissa0070:$HF_TOKEN@huggingface.co/spaces/eissa0070/n8nautomtion main
