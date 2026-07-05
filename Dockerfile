@@ -1,25 +1,13 @@
-# استخدام نسخة Node حديثة ومستقرة
-FROM node:20
+FROM python:3.9
 
-# تحديد مجلد العمل داخل الحاوية
+RUN useradd -m -u 1000 user
+USER user
+ENV PATH="/home/user/.local/bin:$PATH"
+
 WORKDIR /app
 
-# نسخ ملفات الـ package.json لتهيئة تثبيت الحزم
-COPY package*.json ./
+COPY --chown=user ./requirements.txt requirements.txt
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-# تثبيت الحزم بالكامل (بما فيها حزم التطوير لأن Tailwind v4 و Vite يحتاجانها للبناء)
-RUN npm install --legacy-peer-deps
-
-# نسخ كافة ملفات المشروع إلى الحاوية
-COPY . .
-
-# بناء واجهة الـ Frontend وتحويلها لمجلد dist
-RUN npm run build
-
-# إعلام الحاوية بالمنفذ الذي تفرضه Hugging Face
-EXPOSE 7860
-ENV PORT=7860
-ENV NODE_ENV=production
-
-# تشغيل السيرفر مباشرة باستخدام أداة tsx
-CMD ["npx", "tsx", "server.ts"]
+COPY --chown=user . /app
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
