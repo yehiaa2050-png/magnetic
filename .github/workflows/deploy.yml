@@ -1,1 +1,29 @@
+name: Sync to Hugging Face Space
 
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Configure Git
+        run: |
+          git config --global user.email "yehiaa2050@gmail.com"
+          git config --global user.name "yehiaa2050-png"
+          
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git remote add space https://eissa0070:$HF_TOKEN@huggingface.co/spaces/eissa0070/n8nautomtion
+          # حذف README.md من المستودع البعيد مباشرة
+          git push space --delete README.md || echo "README.md not found, continuing..."
+          # ثم دفع المحتوى الجديد مع -f لتجاوز أي تعارضات
+          git push -f space main
