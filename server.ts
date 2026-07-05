@@ -5,7 +5,8 @@ import Groq from "groq-sdk";
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  // تعديل المنفذ ليقرأ تلقائياً من بيئة Hugging Face (7860) أو 3000 للتطوير المحلي
+  const PORT = Number(process.env.PORT) || 3000;
 
   app.use(express.json());
 
@@ -14,7 +15,7 @@ async function startServer() {
     if (!groqClient) {
       const key = process.env.GROQ_API_KEY;
       if (!key) {
-        throw new Error("GROQ_API_KEY is not set. Please set it in the AI Studio environment.");
+        throw new Error("GROQ_API_KEY is not set. Please set it in the environment.");
       }
       groqClient = new Groq({ apiKey: key });
     }
@@ -40,7 +41,7 @@ async function startServer() {
       const groq = getGroq();
       const chatCompletion = await groq.chat.completions.create({
         messages: [{ role: 'user', content: prompt }],
-        model: 'llama-3.3-70b-versatile', // Strong open-source model suitable for Arabic
+        model: 'llama-3.3-70b-versatile',
       });
 
       res.json({ suggestion: chatCompletion.choices[0]?.message?.content || 'لا يوجد اقتراح' });
@@ -88,7 +89,7 @@ async function startServer() {
     }
   });
 
-  // Vite middleware for development
+  // Vite middleware for development vs static serve for production
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -104,7 +105,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
   });
 }
 
