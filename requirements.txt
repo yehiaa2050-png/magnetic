@@ -1,2 +1,4 @@
 fastapi
 uvicorn[standard]
+# أضف n8n هنا إذا أردت تثبيته
+ n8n
