@@ -1,4 +1,4 @@
-# استخدام نسخة Node المستقرة والحديثة لضمان توافق React 19
+# استخدام نسخة Node حديثة ومستقرة
 FROM node:20
 
 # تحديد مجلد العمل داخل الحاوية
@@ -7,19 +7,19 @@ WORKDIR /app
 # نسخ ملفات الـ package.json لتهيئة تثبيت الحزم
 COPY package*.json ./
 
-# تثبيت الحزم بالكامل بما فيها أدوات التطوير اللازمة للـ TypeScript و tsx
-RUN npm install --legacy-peer-deps --include=dev
+# تثبيت الحزم بالكامل (بما فيها حزم التطوير لأن Tailwind v4 و Vite يحتاجانها للبناء)
+RUN npm install --legacy-peer-deps
 
 # نسخ كافة ملفات المشروع إلى الحاوية
 COPY . .
 
-# بناء واجهة الـ Frontend وتحويلها لمجلد dist لتستطيع Express قراءتها
+# بناء واجهة الـ Frontend وتحويلها لمجلد dist
 RUN npm run build
 
-# فتح المنفذ الخاص بـ Hugging Face وتعيين بيئة العمل كـ الإنتاج
+# إعلام الحاوية بالمنفذ الذي تفرضه Hugging Face
 EXPOSE 7860
 ENV PORT=7860
 ENV NODE_ENV=production
 
-# تشغيل السيرفر مباشرة باستخدام أداة tsx لملفات الـ TypeScript
+# تشغيل السيرفر مباشرة باستخدام أداة tsx
 CMD ["npx", "tsx", "server.ts"]
